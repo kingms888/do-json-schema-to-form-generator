@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>JSON Schema to Form Generator · dev tool</title>
+  <meta name="description" content="Generate a live HTML form from any JSON Schema. Pure frontend, no upload, no tracking. Developer productivity tool for JSON forms, AI prompts, and schema testing.">
+  <meta name="keywords" content="json schema form generator, ai prompt to json, developer productivity tool, etsy seo tool, amazon seller calculator, csv/json tools, developer tools, seo tools, json schema to form generator">
+  <meta name="author" content="SchemaForm.dev (demo)">
+  <meta property="og:title" content="JSON Schema → Form Generator">
+  <meta property="og:description" content="Instant form generation from any JSON Schema. Works offline, mobile friendly.">
+  <meta property="og:type" content="website">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://schemaform.example.com/">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: #f5f7fc;
+      color: #1e293b;
+      padding: 1rem;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 2rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      padding: 1.5rem 1.8rem 2.5rem;
+    }
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    h1 small {
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: #475569;
+      background: #eef2ff;
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      margin-left: 0.2rem;
+    }
+    .subhead {
+      color: #475569;
+      margin: 0.2rem 0 1.5rem 0;
+      border-left: 4px solid #3b82f6;
+      padding-left: 1rem;
+      font-size: 1rem;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.8rem;
+      margin: 1.8rem 0;
+    }
+    @media (max-width: 720px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+      .container { padding: 1rem; }
+      h1 { font-size: 1.6rem; }
+    }
+    textarea, .form-preview-box {
+      width: 100%;
+      border: 1px solid #d1d9e6;
+      border-radius: 16px;
+      padding: 1rem;
+      font-size: 0.95rem;
+      background: #fafbff;
+      transition: 0.2s;
+    }
+    textarea:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+      outline: none;
+      background: white;
+    }
+    textarea {
+      min-height: 280px;
+      resize: vertical;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace, system-ui;
+    }
+    .label-sm {
+      font-weight: 500;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #334155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin: 0.8rem 0 0.2rem;
+    }
+    .btn {
+      background: white;
+      border: 1px solid #cbd5e1;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: 0.15s;
+      color: #1e293b;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+    .btn-primary {
+      background: #1e293b;
+      border: 1px solid #1e293b;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #0f172a;
+    }
+    .btn-outline:hover {
+      background: #eef2ff;
+      border-color: #3b82f6;
+    }
+    .form-preview-box {
+      background: white;
+      min-height: 280px;
+      border: 1px solid #d1d9e6;
+      overflow-y: auto;
+    }
+    .form-preview-box label {
+      display: block;
+      margin-top: 0.7rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #0f172a;
+    }
+    .form-preview-box input, .form-preview-box select, .form-preview-box textarea {
+      width: 100%;
+      padding: 0.5rem 0.7rem;
+      margin-top: 0.2rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      background: #f8fafc;
+    }
+    .form-preview-box input[type="checkbox"] {
+      width: auto;
+      margin-right: 0.5rem;
+    }
+    .form-preview-box fieldset {
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 0.8rem 1rem;
+      margin: 0.8rem 0;
+    }
+    .form-preview-box legend {
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 0 0.4rem;
+    }
+    .badge {
+      background: #dbeafe;
+      color: #1e40af;
+      border-radius: 30px;
+      padding: 0.2rem 0.8rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+    .placeholder-ad {
+      background: #f1f5f9;
+      border-radius: 20px;
+      padding: 0.8rem 1.2rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin: 2rem 0 0.8rem;
+      border: 1px dashed #94a3b8;
+      color: #334155;
+    }
+    .placeholder-ad span {
+      opacity: 0.7;
+      font-size: 0.85rem;
+    }
+    .affiliate-resources {
+      background: #f8fafc;
+      border-radius: 20px;
+      padding: 1rem 1.4rem;
+      margin: 1.5rem 0 0.8rem;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .affiliate-resources a {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: 500;
+      margin: 0.2rem 0.6rem 0.2rem 0;
+    }
+    .affiliate-resources a:hover {
+      text-decoration: underline;
+    }
+    .privacy-note {
+      font-size: 0.75rem;
+      color: #64748b;
+      background: #f1f5f9;
+      padding: 0.5rem 1rem;
+      border-radius: 40px;
+      display: inline-block;
+      margin-top: 1rem;
+    }
+    .footer-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1.2rem;
+      border-top: 1px solid #e9edf2;
+      padding-top: 1rem;
+    }
+    .error-msg {
+      color: #b91c1c;
+      background: #fee2e2;
+      padding: 0.5rem 1rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      margin-top: 0.3rem;
+    }
+    .built-with {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>
+      ⚡ JSON Schema → Form
+      <small>live generator</small>
+    </h1>
+    <div class="subhead">Paste any JSON Schema — get a working HTML form. Pure frontend, no data leaves your device.</div>
+  </header>
+
+  <!-- MAIN TOOL: two columns -->
+  <div class="grid-2">
+    <!-- left: schema input -->
+    <section>
+      <div class="label-sm">
+        <span>📋 JSON Schema</span>
+        <span class="badge">try default</span>
+      </div>
+      <textarea id="schemaInput" aria-label="JSON Schema input" placeholder='{\n  "type": "object",\n  "properties": {\n    "name": { "type": "string" },\n    "age": { "type": "integer", "minimum": 0 }\n  }\n}'>{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Developer profile",
+  "description": "Generate a quick form",
+  "type": "object",
+  "properties": {
+    "fullName": {
+      "type": "string",
+      "title": "Full name",
+      "minLength": 1
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "title": "Email address"
+    },
+    "yearsOfExp": {
+      "type": "integer",
+      "title": "Years of experience",
+      "minimum": 0,
+      "maximum": 50,
+      "default": 2
+    },
+    "stack": {
+      "type": "string",
+      "title": "Primary stack",
+      "enum": ["JavaScript", "Python", "Go", "Rust", "Other"]
+    },
+    "remote": {
+      "type": "boolean",
+      "title": "Open to remote",
+      "default": true
+    },
+    "bio": {
+      "type": "string",
+      "title": "Short bio",
+      "maxLength": 300
+    }
+  },
+  "required": ["fullName", "email"]
+}</textarea>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="generateBtn">⟳ Generate form</button>
+        <button class="btn btn-outline" id="resetDefaultBtn">↺ Reset default</button>
+      </div>
+      <div id="schemaError" class="error-msg" style="display: none;"></div>
+    </section>
+
+    <!-- right: generated form preview -->
+    <section>
+      <div class="label-sm">
+        <span>📄 Generated form</span>
+        <span class="badge">live preview</span>
+      </div>
+      <div id="formPreview" class="form-preview-box">
+        <p style="color: #64748b; padding: 0.5rem 0;">▶ Click <strong>Generate form</strong> to build from schema</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- AD PLACEHOLDER (visible) -->
+  <div class="placeholder-ad" aria-label="advertisement placeholder">
+    <span>📢 <strong>Sponsored</strong> – Form library affiliate</span>
+    <span style="display: flex; gap: 0.8rem; align-items: center;">
+      <span style="opacity: 0.9;">Try <a href="#" style="color:#2563eb; text-decoration: none; font-weight: 500;" onclick="reportEvent('ad_click',{ad:'formlib'}); return false;">React Hook Form</a> (affiliate)</span>
+      <span style="opacity: 0.6; font-size: 0.75rem;">& vert; </span>
+      <span style="opacity: 0.9;"><a href="#" style="color:#2563eb; text-decoration: none;" onclick="reportEvent('ad_click',{ad:'hosting'}); return false;">Deploy fast</a></span>
+    </span>
+  </div>
+
+  <!-- AFFILIATE / RESOURCE PLACEHOLDER -->
+  <div class="affiliate-resources">
+    <span>🔗 <strong>Resources</strong> for devs</span>
+    <span style="display: flex; flex-wrap: wrap;">
+      <a href="#" onclick="reportEvent('affiliate',{resource:'jsonforms'})">JSON Forms</a>
+      <a href="#" onclick="reportEvent('affiliate',{resource:'formik'})">Formik</a>
+      <a href="#" onclick="reportEvent('affiliate',{resource:'ajv'})">AJV validator</a>
+      <span style="color: #94a3b8; font-size: 0.75rem;">(affiliate links)</span>
+    </span>
+  </div>
+
+  <!-- PRIVACY NOTE + METRICS -->
+  <div class="footer-meta">
+    <div class="privacy-note">
+      🔒 Privacy: events may be counted anonymously for product improvement. No credentials collected.
+    </div>
+    <div class="built-with">
+      🛠️ pure frontend · JSON Schema draft-07
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ---------- reportEvent ----------
+    window.reportEvent = function(name, payload = {}) {
+      if (typeof window.ORGANISM_METRICS_ENDPOINT === 'string' && window.ORGANISM_METRICS_ENDPOINT.length > 0) {
+        try {
+          const body = JSON.stringify({ event: name, payload: payload, time: Date.now() });
+          fetch(window.ORGANISM_METRICS_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: body,
+            keepalive: true
+          }).catch(() => {}); // silently fail
+        } catch (e) { /* ignore */ }
+      }
+    };
+
+    // DOM refs
+    const schemaInput = document.getElementById('schemaInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const resetDefaultBtn = document.getElementById('resetDefaultBtn');
+    const formPreview = document.getElementById('formPreview');
+    const schemaError = document.getElementById('schemaError');
+
+    // default schema (same as placeholder)
+    const DEFAULT_SCHEMA = schemaInput.value;
+
+    // ---------- form generation ----------
+    function generateFormFromSchema(schemaText) {
+      let schema;
+      try {
+        schema = JSON.parse(schemaText);
+      } catch (e) {
+        schemaError.style.display = 'block';
+        schemaError.textContent = '❌ Invalid JSON: ' + e.message;
+        return null;
+      }
+      schemaError.style.display = 'none';
+
+      // basic validation: must be object
+      if (typeof schema !== 'object' || schema === null || Array.isArray(schema)) {
+        schemaError.style.display = 'block';
+        schemaError.textContent = '❌ Schema must be a JSON object (type: object).';
+        return null;
+      }
+      if (schema.type !== 'object' && schema.properties) {
+        // allow if properties exist
+      } else if (schema.type !== 'object') {
+        // but we can still try to render if properties exist
+        if (!schema.properties) {
+          schemaError.style.display = 'block';
+          schemaError.textContent = '❌ Schema should have "type": "object" and "properties".';
+          return null;
+        }
+      }
+
+      return schema;
+    }
+
+    function buildFormFromSchema(schema) {
+      if (!schema || !schema.properties) {
+        formPreview.innerHTML = `<p style="color: #64748b;">⚠️ No properties found in schema.</p>`;
+        return;
+      }
+
+      const title = schema.title || 'Generated form';
+      const description = schema.description || '';
+      const required = Array.isArray(schema.required) ? schema.required : [];
+
+      let html = `<fieldset><legend>${escapeHtml(title)}</legend>`;
+      if (description) {
+        html += `<p style="font-size:0.85rem; color:#475569; margin-bottom:0.5rem;">${escapeHtml(description)}</p>`;
+      }
+
+      const props = schema.properties;
+      for (const [key, prop] of Object.entries(props)) {
+        if (typeof prop !== 'object' || prop === null) continue;
+        const label = prop.title || key;
+        const isRequired = required.includes(key);
+        const requiredMark = isRequired ? ' <span style="color:#b91c1c;">*</span>' : '';
+        const desc = prop.description ? `<small style="color:#64748b;">${escapeHtml(prop.description)}</small>` : '';
+
+        html += `<label for="field-${key}">${escapeHtml(label)}${requiredMark}</label>${desc}`;
+
+        let inputHtml = '';
+        const type = prop.type || 'string';
+        const isEnum = Array.isArray(prop.enum) && prop.enum.length > 0;
+
+        if (isEnum) {
+          inputHtml = `<select id="field-${key}" name="${key}">`;
+          prop.enum.forEach(opt => {
+            const selected = (prop.default === opt) ? ' selected' : '';
+            inputHtml += `<option value="${escapeHtml(String(opt))}"${selected}>${escapeHtml(String(opt))}</option>`;
+          });
+          inputHtml += `</select>`;
+        } else if (type === 'boolean') {
+          const checked = prop.default === true ? ' checked' : '';
+          inputHtml = `<div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.2rem;">
+            <input type="checkbox" id="field-${key}" name="${key}"${checked} style="width:auto;">
+            <span>${escapeHtml(label)}</span>
+          </div>`;
+        } else if (type === 'integer' || type === 'number') {
+          const min = prop.minimum !== undefined ? ` min="${prop.minimum}"` : '';
+          const max = prop.maximum !== undefined ? ` max="${prop.maximum}"` : '';
+          const step = type === 'integer' ? ' step="1"' : ' step="0.1"';
+          const val = prop.default !== undefined ? ` value="${prop.default}"` : '';
+          inputHtml = `<input type="number" id="field-${key}" name="${key}"${min}${max}${step}${val}>`;
+        } else if (type === 'string' && prop.format === 'email') {
+          const val = prop.default ? ` value="${escapeHtml(String(prop.default))}"` : '';
+          inputHtml = `<input type="email" id="field-${key}" name="${key}"${val} placeholder="user@example.com">`;
+        } else if (type === 'string' && prop.maxLength && prop.maxLength > 80) {
+          const val = prop.default ? escapeHtml(String(prop.default)) : '';
+          inputHtml = `<textarea id="field-${key}" name="${key}" maxlength="${prop.maxLength}" rows="2">${val}</textarea>`;
+        } else {
+          // default string
+          const val = prop.default ? ` value="${escapeHtml(String(prop.default))}"` : '';
+          const maxLen = prop.maxLength ? ` maxlength="${prop.maxLength}"` : '';
+          inputHtml = `<input type="text" id="field-${key}" name="${key}"${val}${maxLen}>`;
+        }
+
+        html += inputHtml;
+      }
+
+      html += `</fieldset>`;
+      // add a small submit button (non-functional, just preview)
+      html += `<div style="margin-top:1rem;"><button class="btn btn-primary" style="background:#e2e8f0; color:#1e293b; border:1px solid #cbd5e1;" disabled>⚡ Submit (preview)</button></div>`;
+
+      formPreview.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return String(str);
+      return str.replace(/[&<>"']/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        if (m === '"') return '&quot;';
+        if (m === "'") return '&#039;';
+        return m;
+      });
+    }
+
+    // ---------- main generate action ----------
+    function handleGenerate() {
+      const schemaText = schemaInput.value.trim();
+      if (!schemaText) {
+        schemaError.style.display = 'block';
+        schemaError.textContent = '❌ Please enter a JSON Schema.';
+        return;
+      }
+      const schema = generateFormFromSchema(schemaText);
+      if (schema) {
+        buildFormFromSchema(schema);
+        reportEvent('generate_form', { schemaTitle: schema.title || 'untitled' });
+      } else {
+        // error already displayed
+        reportEvent('generate_error', { error: schemaError.textContent });
+      }
+    }
+
+    // reset default
+    function resetDefault() {
+      schemaInput.value = DEFAULT_SCHEMA;
+      schemaError.style.display = 'none';
+      // auto generate after reset
+      handleGenerate();
+    }
+
+    // ---------- event listeners ----------
+    generateBtn.addEventListener('click', handleGenerate);
+    resetDefaultBtn.addEventListener('click', resetDefault);
+
+    // initial generation on page load
+    window.addEventListener('DOMContentLoaded', function() {
+      // generate default form
+      setTimeout(() => {
+        handleGenerate();
+        reportEvent('page_view', { tool: 'json_schema_form_generator' });
+      }, 50);
+    });
+
+    // also generate on Ctrl+Enter (optional)
+    schemaInput.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleGenerate();
+      }
+    });
+
+    // expose for debugging
+    window.__generateForm = handleGenerate;
+  })();
+</script>
+
+<!-- configure dummy endpoint for demo (no actual tracking) -->
+<script>
+  // For demonstration, we set a dummy endpoint that logs to console.
+  // In production, set window.ORGANISM_METRICS_ENDPOINT to your real endpoint.
+  // This simulates the privacy note: events may be counted anonymously.
+  if (!window.ORGANISM_METRICS_ENDPOINT) {
+    // Use a no-op endpoint that just logs (no network)
+    window.ORGANISM_METRICS_ENDPOINT = ''; // set to empty to disable (privacy first)
+    // but we can still show the concept: if you want to test, uncomment next line:
+    // window.ORGANISM_METRICS_ENDPOINT = 'https://httpbin.org/post';
+  }
+  // Override reportEvent to also show in console for demo (transparent)
+  const originalReport = window.reportEvent;
+  window.reportEvent = function(name, payload) {
+    if (typeof console !== 'undefined' && console.log) {
+      console.log(`[metrics] ${name}`, payload);
+    }
+    if (window.ORGANISM_METRICS_ENDPOINT && typeof originalReport === 'function') {
+      originalReport(name, payload);
+    }
+  };
+</script>
+
+<section data-organism-discovery="hub" style="margin:32px auto 20px;max-width:1040px;padding:16px;border-top:1px solid #d9e2ec;color:#475569;font:14px/1.5 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <strong style="display:block;color:#0f172a;margin-bottom:6px">More free browser tools</strong>
+  <p style="margin:0 0 8px">This page is part of an autonomous micro-tool network. Explore the live tool directory and related utilities.</p>
+  <p style="margin:0"><a href="https://kingms888.github.io/do-digital-organism-index/" style="color:#0f766e;font-weight:700">Open the tool directory</a> </p>
+</section>
+</body>
+</html>
